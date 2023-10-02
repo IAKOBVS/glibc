@@ -389,10 +389,9 @@ open_dir_stream (int *dfdp, struct ftw_data *data, struct dir_data *dirp)
 
 
 static int
-process_entry (struct ftw_data *data, struct dir_data *dir, const char *name,
+process_entry (struct ftw_data *data, struct STRUCT_STAT *st, struct dir_data *dir, const char *name,
 	       size_t namlen, int d_type)
 {
-  struct STRUCT_STAT st;
   int result = 0;
   int flag = 0;
   size_t new_buflen;
@@ -411,7 +410,7 @@ process_entry (struct ftw_data *data, struct dir_data *dir, const char *name,
 
   int statres;
   if (dir->streamfd != -1)
-    statres = FSTATAT (dir->streamfd, name, &st,
+    statres = FSTATAT (dir->streamfd, name, st,
 		       (data->flags & FTW_PHYS) ? AT_SYMLINK_NOFOLLOW : 0);
   else
     {
@@ -419,8 +418,8 @@ process_entry (struct ftw_data *data, struct dir_data *dir, const char *name,
 	name = data->dirbuf;
 
       statres = ((data->flags & FTW_PHYS)
-		 ? LSTAT (name, &st)
-		 : STAT (name, &st));
+		 ? LSTAT (name, st)
+		 : STAT (name, st));
     }
 
   if (statres < 0)
@@ -436,11 +435,11 @@ process_entry (struct ftw_data *data, struct dir_data *dir, const char *name,
 	     it should contain information about the link (ala lstat).
 	     We do our best to fill in what data we can.  */
 	  if (dir->streamfd != -1)
-	    statres = FSTATAT (dir->streamfd, name, &st,
+	    statres = FSTATAT (dir->streamfd, name, st,
 			       AT_SYMLINK_NOFOLLOW);
 	  else
-	    statres = LSTAT (name, &st);
-	  if (statres == 0 && S_ISLNK (st.st_mode))
+	    statres = LSTAT (name, st);
+	  if (statres == 0 && S_ISLNK (st->st_mode))
 	    flag = FTW_SLN;
 	  else
 	    flag = FTW_NS;
@@ -448,9 +447,9 @@ process_entry (struct ftw_data *data, struct dir_data *dir, const char *name,
     }
   else
     {
-      if (S_ISDIR (st.st_mode))
+      if (S_ISDIR (st->st_mode))
 	flag = FTW_D;
-      else if (S_ISLNK (st.st_mode))
+      else if (S_ISLNK (st->st_mode))
 	flag = FTW_SL;
       else
 	flag = FTW_F;
@@ -458,18 +457,18 @@ process_entry (struct ftw_data *data, struct dir_data *dir, const char *name,
 
   if (result == 0
       && (flag == FTW_NS
-	  || !(data->flags & FTW_MOUNT) || st.st_dev == data->dev))
+	  || !(data->flags & FTW_MOUNT) || st->st_dev == data->dev))
     {
       if (flag == FTW_D)
 	{
 	  if ((data->flags & FTW_PHYS)
-	      || (!find_object (data, &st)
+	      || (!find_object (data, st)
 		  /* Remember the object.  */
-		  && (result = add_object (data, &st)) == 0))
-	    result = ftw_dir (data, &st, dir);
+		  && (result = add_object (data, st)) == 0))
+	    result = ftw_dir (data, st, dir);
 	}
       else
-	result = (*data->func) (data->dirbuf, &st, data->cvt_arr[flag],
+	result = (*data->func) (data->dirbuf, st, data->cvt_arr[flag],
 				&data->ftw);
     }
 
@@ -548,7 +547,7 @@ fail:
 #ifdef _DIRENT_HAVE_D_TYPE
       d_type = d->d_type;
 #endif
-      result = process_entry (data, &dir, d->d_name, NAMLEN (d), d_type);
+      result = process_entry (data, st, &dir, d->d_name, NAMLEN (d), d_type);
       if (result != 0)
 	break;
     }
@@ -579,7 +578,7 @@ fail:
 	  char *endp = strchr (runp, '\0');
 
 	  // XXX Should store the d_type values as well?!
-	  result = process_entry (data, &dir, runp, endp - runp, DT_UNKNOWN);
+	  result = process_entry (data, st, &dir, runp, endp - runp, DT_UNKNOWN);
 
 	  runp = endp + 1;
 	}
