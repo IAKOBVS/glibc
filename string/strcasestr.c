@@ -55,6 +55,30 @@
 #endif
 
 
+static inline char *__attribute__ ((always_inline))
+strcasechr (const char *s, char c)
+{
+  if (isalpha(c)) {
+    /* May have optimized strcspn? */
+#if defined __sparc__ || defined __sparc || defined __x86_64__ || defined _M_X64 || defined __s390x__ || defined i386 || defined __i386__ || defined __i386 || defined _M_IX86 || defined __PPC64__ || defined __ppc64__ || defined _ARCH_PPC64 || _ARCH_PWR8
+    const char a[] = {tolower(c), toupper(c), '\0'};
+    s = (char *)strcspn(s, a);
+#else
+    c = tolower(c);
+    while (*s && tolower(*s) != c)
+      ++s;
+#endif
+    if (*s != '\0')
+      return (char *)s;
+  } else {
+    s = strchr(s, c);
+    if (s != NULL)
+      return (char *)s;
+  }
+  return NULL;
+}
+
+
 /* Find the first occurrence of NEEDLE in HAYSTACK, using
    case-insensitive comparison.  This function gives unspecified
    results in multibyte locales.  */
@@ -68,6 +92,10 @@ STRCASESTR (const char *haystack, const char *needle)
   if (needle[0] == '\0')
     return (char *) haystack;
 
+  haystack = strcasechr (haystack, *needle);
+  if (haystack == NULL || needle[1] == '\0')
+	  return (char *) haystack;
+
   /* Ensure HAYSTACK length is at least as long as NEEDLE length.
      Since a match may occur early on in a huge HAYSTACK, use strnlen
      and read ahead a few cachelines for improved performance.  */
@@ -75,6 +103,9 @@ STRCASESTR (const char *haystack, const char *needle)
   haystack_len = __strnlen (haystack, needle_len + 256);
   if (haystack_len < needle_len)
     return NULL;
+  
+  if (strncasecmp (haystack, needle, needle_len) == 0)
+    return (char *) haystack;
 
   /* Perform the search.  Abstract memory is considered to be an array
      of 'unsigned char' values, not an array of 'char' values.  See
