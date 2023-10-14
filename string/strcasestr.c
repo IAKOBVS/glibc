@@ -60,7 +60,7 @@ strcasechr (const char *s, char c)
 {
   if (isalpha(c)) {
     /* May have optimized strcspn? */
-#if defined __sparc__ || defined __sparc || defined __x86_64__ || defined _M_X64 || defined __s390x__ || defined i386 || defined __i386__ || defined __i386 || defined _M_IX86 || defined __PPC64__ || defined __ppc64__ || defined _ARCH_PPC64 || _ARCH_PWR8
+#if defined __sparc__ || defined __sparc || defined __x86_64__ || defined _M_X64 || defined __s390x__ || defined i386 || defined __i386__ || defined __i386 || defined _M_IX86 || defined __PPC64__ || defined __ppc64__ || defined _ARCH_PPC64 || defined _ARCH_PWR8
     const char a[] = {tolower(c), toupper(c), '\0'};
     s = (char *)strcspn(s, a);
 #else
@@ -100,12 +100,13 @@ STRCASESTR (const char *haystack, const char *needle)
      Since a match may occur early on in a huge HAYSTACK, use strnlen
      and read ahead a few cachelines for improved performance.  */
   needle_len = strlen (needle);
-  haystack_len = __strnlen (haystack, needle_len + 256);
+  haystack_len = __strnlen (haystack, needle_len);
   if (haystack_len < needle_len)
     return NULL;
   
   if (strncasecmp (haystack, needle, needle_len) == 0)
     return (char *) haystack;
+  haystack_len += __strnlen(haystack + haystack_len, needle_len + 256);
 
   /* Perform the search.  Abstract memory is considered to be an array
      of 'unsigned char' values, not an array of 'char' values.  See
