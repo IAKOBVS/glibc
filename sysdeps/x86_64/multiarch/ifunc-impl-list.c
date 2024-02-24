@@ -798,6 +798,19 @@ __libc_ifunc_impl_list (const char *name, struct libc_ifunc_impl *array,
                               __strstr_avx512)
 	      IFUNC_IMPL_ADD (array, i, strstr, 1, __strstr_sse2_unaligned)
 	      IFUNC_IMPL_ADD (array, i, strstr, 1, __strstr_generic))
+  
+    /* Support sysdeps/x86_64/multiarch/memmem.c.  */
+  IFUNC_IMPL (i, name, memmem,
+              IFUNC_IMPL_ADD (array, i, memmem,
+		              (CPU_FEATURE_USABLE (AVX2)
+			      && CPU_FEATURE_USABLE (BMI1)),
+			      __memmem_avx2)
+              IFUNC_IMPL_ADD (array, i, memmem,
+                              (CPU_FEATURE_USABLE (AVX512BW)
+                               && CPU_FEATURE_USABLE (BMI1)),
+                              __memmem_avx512)
+	      IFUNC_IMPL_ADD (array, i, memmem, 1, __memmem_generic)
+	      IFUNC_IMPL_ADD (array, i, memmem, 1, __memmem_sse2))
 
   /* Support sysdeps/x86_64/multiarch/wcschr.c.  */
   IFUNC_IMPL (i, name, wcschr,

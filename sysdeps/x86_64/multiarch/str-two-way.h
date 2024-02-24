@@ -1,0 +1,1 @@
+#define TWO_WAY_LONG_NEEDLE_FUNC_NAME __two_way_long_needle

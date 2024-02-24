@@ -15,6 +15,10 @@ sysdep_routines += \
   memcmpeq-avx2-rtm \
   memcmpeq-evex \
   memcmpeq-sse2 \
+  memmem-avx-base \
+  memmem-avx2 \
+  memmem-avx512 \
+  memmem-sse2 \
   memmove-avx-unaligned-erms \
   memmove-avx-unaligned-erms-rtm \
   memmove-avx512-no-vzeroupper \
@@ -121,6 +125,10 @@ sysdep_routines += \
   strstr-sse2-unaligned \
   varshift \
 # sysdep_routines
+
+CFLAGS-memmem-avx2.c += -mavx2 -mbmi -O3
+CFLAGS-memmem-avx512.c += -mavx512f -mavx512bw -mbmi -O3
+CFLAGS-memmem-sse2.c += -O3
 
 CFLAGS-strcspn-sse4.c += -msse4
 CFLAGS-strpbrk-sse4.c += -msse4

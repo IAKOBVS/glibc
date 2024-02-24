@@ -25,6 +25,10 @@
 # define __memmem	memmem
 #endif
 
+#ifndef MEMMEM
+# define MEMMEM __memmem
+#endif
+
 #define RETURN_TYPE void *
 #define AVAILABLE(h, h_l, j, n_l) ((j) <= (h_l) - (n_l))
 #define FASTSEARCH(S,C,N) (void*) memchr ((void *)(S), (C), (N))
@@ -50,7 +54,7 @@
    The limit also implies worst-case performance is linear.
    Needles larger than 256 characters use the linear-time Two-Way algorithm.  */
 void *
-__memmem (const void *haystack, size_t hs_len,
+MEMMEM (const void *haystack, size_t hs_len,
 	  const void *needle, size_t ne_len)
 {
   const unsigned char *hs = (const unsigned char *) haystack;
@@ -77,7 +81,7 @@ __memmem (const void *haystack, size_t hs_len,
 
   /* Use Two-Way algorithm for very long needles.  */
   if (__builtin_expect (ne_len > 256, 0))
-    return two_way_long_needle (hs, hs_len, ne, ne_len);
+    return TWO_WAY_LONG_NEEDLE_FUNC_NAME (hs, hs_len, ne, ne_len);
 
   uint8_t shift[256];
   size_t tmp, shift1;

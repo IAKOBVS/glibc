@@ -91,6 +91,15 @@
 # define RET0_IF_0(a) /* nothing */
 #endif
 
+#ifndef TWO_WAY_LONG_NEEDLE_FUNC_NAME
+# define TWO_WAY_LONG_NEEDLE_FUNC_NAME two_way_long_needle
+#endif
+#ifndef TWO_WAY_LONG_NEEDLE_NON_STATIC
+# define TWO_WAY_LONG_NEEDLE_STATIC static
+#else
+# define TWO_WAY_LONG_NEEDLE_STATIC
+#endif
+
 /* Perform a critical factorization of NEEDLE, of length NEEDLE_LEN.
    Return the index of the first byte in the right half, and set
    *PERIOD to the global period of the right half.
@@ -386,8 +395,8 @@ two_way_short_needle (const unsigned char *haystack, size_t haystack_len,
 
    Since this function is large and complex, block inlining to avoid
    slowing down the common case of small needles.  */
-__attribute__((noinline)) static RETURN_TYPE
-two_way_long_needle (const unsigned char *haystack, size_t haystack_len,
+__attribute__((noinline)) TWO_WAY_LONG_NEEDLE_STATIC RETURN_TYPE
+TWO_WAY_LONG_NEEDLE_FUNC_NAME (const unsigned char *haystack, size_t haystack_len,
 		     const unsigned char *needle, size_t needle_len)
 {
   size_t i; /* Index into current byte of NEEDLE.  */
